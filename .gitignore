@@ -34,4 +34,4 @@ packages
 packages/*
 *.exe
 *.zip
-/.vs/*
+**/.vs/*

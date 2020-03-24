@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include <streams.h>
+#include "Libs\streams.h"
 #include <stdio.h>
 #include <olectl.h>
 #include <dvdmedia.h>

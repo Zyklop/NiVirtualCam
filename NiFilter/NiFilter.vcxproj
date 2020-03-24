@@ -12,6 +12,37 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dll.cpp" />
+    <ClCompile Include="Libs\amextra.cpp" />
+    <ClCompile Include="Libs\amfilter.cpp" />
+    <ClCompile Include="Libs\amvideo.cpp" />
+    <ClCompile Include="Libs\arithutil.cpp" />
+    <ClCompile Include="Libs\combase.cpp" />
+    <ClCompile Include="Libs\cprop.cpp" />
+    <ClCompile Include="Libs\ctlutil.cpp" />
+    <ClCompile Include="Libs\ddmm.cpp" />
+    <ClCompile Include="Libs\dllentry.cpp" />
+    <ClCompile Include="Libs\dllsetup.cpp" />
+    <ClCompile Include="Libs\mtype.cpp" />
+    <ClCompile Include="Libs\outputq.cpp" />
+    <ClCompile Include="Libs\perflog.cpp" />
+    <ClCompile Include="Libs\pstream.cpp" />
+    <ClCompile Include="Libs\pullpin.cpp" />
+    <ClCompile Include="Libs\refclock.cpp" />
+    <ClCompile Include="Libs\renbase.cpp" />
+    <ClCompile Include="Libs\schedule.cpp" />
+    <ClCompile Include="Libs\seekpt.cpp" />
+    <ClCompile Include="Libs\source.cpp" />
+    <ClCompile Include="Libs\strmctl.cpp" />
+    <ClCompile Include="Libs\sysclock.cpp" />
+    <ClCompile Include="Libs\transfrm.cpp" />
+    <ClCompile Include="Libs\transip.cpp" />
+    <ClCompile Include="Libs\videoctl.cpp" />
+    <ClCompile Include="Libs\vtrans.cpp" />
+    <ClCompile Include="Libs\winctrl.cpp" />
+    <ClCompile Include="Libs\winutil.cpp" />
+    <ClCompile Include="Libs\wxdebug.cpp" />
+    <ClCompile Include="Libs\wxlist.cpp" />
+    <ClCompile Include="Libs\wxutil.cpp" />
     <ClCompile Include="NiVirtualCam.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -19,6 +50,44 @@
     <None Include="NiVirtualCam.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Libs\afxres.h" />
+    <ClInclude Include="Libs\amextra.h" />
+    <ClInclude Include="Libs\amfilter.h" />
+    <ClInclude Include="Libs\cache.h" />
+    <ClInclude Include="Libs\checkbmi.h" />
+    <ClInclude Include="Libs\combase.h" />
+    <ClInclude Include="Libs\cprop.h" />
+    <ClInclude Include="Libs\ctlutil.h" />
+    <ClInclude Include="Libs\ddmm.h" />
+    <ClInclude Include="Libs\dllsetup.h" />
+    <ClInclude Include="Libs\dxmperf.h" />
+    <ClInclude Include="Libs\fourcc.h" />
+    <ClInclude Include="Libs\measure.h" />
+    <ClInclude Include="Libs\msgthrd.h" />
+    <ClInclude Include="Libs\mtype.h" />
+    <ClInclude Include="Libs\outputq.h" />
+    <ClInclude Include="Libs\perflog.h" />
+    <ClInclude Include="Libs\perfstruct.h" />
+    <ClInclude Include="Libs\pstream.h" />
+    <ClInclude Include="Libs\pullpin.h" />
+    <ClInclude Include="Libs\refclock.h" />
+    <ClInclude Include="Libs\reftime.h" />
+    <ClInclude Include="Libs\renbase.h" />
+    <ClInclude Include="Libs\schedule.h" />
+    <ClInclude Include="Libs\seekpt.h" />
+    <ClInclude Include="Libs\source.h" />
+    <ClInclude Include="Libs\streams.h" />
+    <ClInclude Include="Libs\strmctl.h" />
+    <ClInclude Include="Libs\sysclock.h" />
+    <ClInclude Include="Libs\transfrm.h" />
+    <ClInclude Include="Libs\transip.h" />
+    <ClInclude Include="Libs\videoctl.h" />
+    <ClInclude Include="Libs\vtrans.h" />
+    <ClInclude Include="Libs\winctrl.h" />
+    <ClInclude Include="Libs\winutil.h" />
+    <ClInclude Include="Libs\wxdebug.h" />
+    <ClInclude Include="Libs\wxlist.h" />
+    <ClInclude Include="Libs\wxutil.h" />
     <ClInclude Include="NiVirtualCam.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -30,19 +99,19 @@
     <RootNamespace>NiFilter</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <ProjectName>NiVirtualCamFilter</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

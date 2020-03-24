@@ -37,10 +37,10 @@
 #endif
 
 
-#include <streams.h>
+#include "Libs/streams.h"
 #include <olectl.h>
 #include <initguid.h>
-#include <dllsetup.h>
+#include "Libs/dllsetup.h"
 #include "NiVirtualCam.h"
 
 #define CreateComObject(clsid, iid, var) CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, iid, (void **)&var);
