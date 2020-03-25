@@ -63,7 +63,7 @@ namespace NiUI
             {
                 SingleInstanceApplication.Run(mainForm, StartupNextInstanceHandler);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Application.Run(mainForm);
             }

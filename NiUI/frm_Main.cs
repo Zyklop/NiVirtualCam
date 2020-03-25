@@ -19,9 +19,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using NiTEWrapper;
 using NiUI.Properties;
-using OpenNIWrapper;
 
 namespace NiUI
 {
@@ -32,7 +30,6 @@ namespace NiUI
         {
             InitializeComponent();
             Text += string.Format(" v{0}", Application.ProductVersion);
-            _bitmap = new Bitmap(1, 1);
             _broadcaster = new BitmapBroadcaster();
         }
 
@@ -68,8 +65,8 @@ namespace NiUI
 
         private void FrmMainFormClosed(object sender, FormClosedEventArgs e)
         {
-            OpenNI.Shutdown();
-            NiTE.Shutdown();
+            _currentDevice?.Stop();
+            _currentDevice?.Dispose();
         }
 
         private void FrmMainFormClosing(object sender, FormClosingEventArgs e)

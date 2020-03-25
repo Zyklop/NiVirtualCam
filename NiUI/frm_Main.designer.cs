@@ -44,7 +44,6 @@
             this.gb_color = new System.Windows.Forms.GroupBox();
             this.cb_hd = new System.Windows.Forms.CheckBox();
             this.gb_ir = new System.Windows.Forms.GroupBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.gb_general = new System.Windows.Forms.GroupBox();
             this.cb_smart = new System.Windows.Forms.CheckBox();
             this.cb_notification = new System.Windows.Forms.CheckBox();
@@ -55,12 +54,14 @@
             this.l_copyright = new System.Windows.Forms.LinkLabel();
             this.notify = new System.Windows.Forms.NotifyIcon(this.components);
             this.lbl_wait = new System.Windows.Forms.Label();
+            this.angle_slider = new System.Windows.Forms.TrackBar();
             ((System.ComponentModel.ISupportInitialize)(this.pb_image)).BeginInit();
             this.gb_depth.SuspendLayout();
             this.gb_color.SuspendLayout();
             this.gb_ir.SuspendLayout();
             this.gb_general.SuspendLayout();
             this.gb_preview.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -163,7 +164,7 @@
             this.gb_depth.Controls.Add(this.cb_fill);
             this.gb_depth.Controls.Add(this.cb_equal);
             this.gb_depth.Controls.Add(this.cb_invert);
-            this.gb_depth.Location = new System.Drawing.Point(12, 67);
+            this.gb_depth.Location = new System.Drawing.Point(12, 64);
             this.gb_depth.Name = "gb_depth";
             this.gb_depth.Size = new System.Drawing.Size(230, 89);
             this.gb_depth.TabIndex = 4;
@@ -173,7 +174,7 @@
             // gb_color
             // 
             this.gb_color.Controls.Add(this.cb_hd);
-            this.gb_color.Location = new System.Drawing.Point(12, 162);
+            this.gb_color.Location = new System.Drawing.Point(12, 158);
             this.gb_color.Name = "gb_color";
             this.gb_color.Size = new System.Drawing.Size(230, 47);
             this.gb_color.TabIndex = 5;
@@ -192,22 +193,13 @@
             // 
             // gb_ir
             // 
-            this.gb_ir.Controls.Add(this.label3);
-            this.gb_ir.Location = new System.Drawing.Point(12, 215);
+            this.gb_ir.Controls.Add(this.angle_slider);
+            this.gb_ir.Location = new System.Drawing.Point(12, 204);
             this.gb_ir.Name = "gb_ir";
-            this.gb_ir.Size = new System.Drawing.Size(230, 45);
+            this.gb_ir.Size = new System.Drawing.Size(230, 68);
             this.gb_ir.TabIndex = 6;
             this.gb_ir.TabStop = false;
-            this.gb_ir.Text = "IR Sensor Settings";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(93, 20);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(33, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "None";
+            this.gb_ir.Text = "Angle";
             // 
             // gb_general
             // 
@@ -215,7 +207,7 @@
             this.gb_general.Controls.Add(this.cb_notification);
             this.gb_general.Controls.Add(this.cb_startup);
             this.gb_general.Controls.Add(this.cb_mirror);
-            this.gb_general.Location = new System.Drawing.Point(12, 266);
+            this.gb_general.Location = new System.Drawing.Point(12, 288);
             this.gb_general.Name = "gb_general";
             this.gb_general.Size = new System.Drawing.Size(230, 113);
             this.gb_general.TabIndex = 7;
@@ -285,7 +277,7 @@
             // l_copyright
             // 
             this.l_copyright.AutoSize = true;
-            this.l_copyright.Location = new System.Drawing.Point(15, 390);
+            this.l_copyright.Location = new System.Drawing.Point(245, 390);
             this.l_copyright.Name = "l_copyright";
             this.l_copyright.Size = new System.Drawing.Size(165, 13);
             this.l_copyright.TabIndex = 8;
@@ -310,6 +302,13 @@
             this.lbl_wait.TabIndex = 13;
             this.lbl_wait.Text = "Please wait ...";
             this.lbl_wait.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // angle_slider
+            // 
+            this.angle_slider.Location = new System.Drawing.Point(7, 19);
+            this.angle_slider.Name = "angle_slider";
+            this.angle_slider.Size = new System.Drawing.Size(208, 45);
+            this.angle_slider.TabIndex = 0;
             // 
             // frm_Main
             // 
@@ -350,6 +349,7 @@
             this.gb_general.ResumeLayout(false);
             this.gb_general.PerformLayout();
             this.gb_preview.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -371,7 +371,6 @@
         private System.Windows.Forms.GroupBox gb_color;
         private System.Windows.Forms.CheckBox cb_hd;
         private System.Windows.Forms.GroupBox gb_ir;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox gb_general;
         private System.Windows.Forms.CheckBox cb_mirror;
         private System.Windows.Forms.CheckBox cb_startup;
@@ -382,6 +381,7 @@
         private System.Windows.Forms.NotifyIcon notify;
         private System.Windows.Forms.CheckBox cb_smart;
         private System.Windows.Forms.Label lbl_wait;
+        private System.Windows.Forms.TrackBar angle_slider;
     }
 }
 
