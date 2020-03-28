@@ -33,11 +33,11 @@ namespace NiUI
     // ReSharper disable once InconsistentNaming
     public sealed partial class frm_Main
     {
+        private const int smallBlockSize = 16;
+        private const int bigBlockSize = 80;
+        private const int depthLimit = 8000;
+
         private readonly BitmapBroadcaster _broadcaster;
-
-        private RectangleF _activePosition = new RectangleF(0, 0, 0, 0);
-
-        private short _activeUserId;
 
         private object bitmapLock = new object();
 
@@ -47,16 +47,19 @@ namespace NiUI
 
         private int _noClientTicker;
 
-        private bool _isHd;
-
         private bool _isIdle = true;
 
         private bool _softMirror;
 
         private object depthLock = new object();
-        private DepthImagePixel[] depthBytes = null;
+        private short[] depthBytes;
 
         private byte[] background;
+        private int[] depthMapping;
+        private int[] smallBlockMapping;
+        private int[] bigBlockMapping;
+
+        private int counter;
 
         public bool IsAutoRun { get; set; }
 
@@ -118,7 +121,7 @@ namespace NiUI
         }
 
 
-        private void CurrentSensorOnNewFrame(byte[] data)
+        private void CurrentSensorOnNewFrame(byte[] data, int bytesPerPixel)
         {
             try
             {
@@ -127,9 +130,33 @@ namespace NiUI
                 {
                     if (depthBytes != null)
                     {
-                        var mapped = new DepthImagePoint[640 * 480];
-                        _currentDevice.CoordinateMapper.MapColorFrameToDepthFrame(ColorImageFormat.RgbResolution640x480Fps30,
-                            DepthImageFormat.Resolution640x480Fps30, depthBytes, mapped);
+                        var smallBlockQuality = new int[640 / smallBlockSize * (480 / smallBlockSize)];
+                        var bigBlockQuality = new int[640 / bigBlockSize * (480 / bigBlockSize)];
+                        for (int i = 0; i < 640 * 480; i++)
+                        {
+                            var depthIndex = depthMapping[i];
+                            var depthValue = depthBytes[depthIndex];
+                            if (depthValue < depthLimit && depthIndex > 0 && depthValue > 0)
+                            {
+                                smallBlockQuality[smallBlockMapping[i]] += 3;
+                                bigBlockQuality[bigBlockMapping[i]] += 3;
+                            }
+                            else if (depthValue == 0)
+                            {
+                                smallBlockQuality[smallBlockMapping[i]] += 2;
+                                bigBlockQuality[bigBlockMapping[i]] += 2;
+                            }
+                            else if (depthValue == -1)
+                            {
+                                smallBlockQuality[smallBlockMapping[i]] += 1;
+                                bigBlockQuality[bigBlockMapping[i]] += 1;
+                            }
+                            else if (depthValue >= depthLimit)
+                            {
+                                smallBlockQuality[smallBlockMapping[i]] -= 3;
+                                bigBlockQuality[bigBlockMapping[i]] -= 3;
+                            }
+                        }
                         im = new Bitmap(640, 480, PixelFormat.Format24bppRgb);
                         BitmapData bmapdata = im.LockBits(
                             new Rectangle(0, 0, 640, 480),
@@ -138,20 +165,24 @@ namespace NiUI
                         IntPtr ptr = bmapdata.Scan0;
                         for (int i = 0; i < 640 * 480; i++)
                         {
-                            if (mapped[i].Depth < 1000)
+                            var depthIndex = depthMapping[i];
+                            var depthValue = depthBytes[depthIndex];
+                            var bigBlockQuali = bigBlockQuality[bigBlockMapping[i]];
+                            var smalllBockQuali = smallBlockQuality[smallBlockMapping[i]];
+                            if ((depthValue < depthLimit) && (depthIndex > 0 && depthValue > 0 || smalllBockQuali > 0 || (smalllBockQuali == 0 && bigBlockQuali > 0) || bigBlockQuali > bigBlockSize * bigBlockSize))
                             {
                                 Marshal.Copy(data, i * 4, ptr + i * 3, 3);
                             }
                             else
                             {
-                                Marshal.Copy(background, i * 3, ptr, 3);
+                                Marshal.Copy(background, i * 3, ptr + i * 3, 3);
                             }
                         }
                         im.UnlockBits(bmapdata);
                     }
                     else
                     {
-                        im = new Bitmap(640, 480, PixelFormat.Format32bppRgb);
+                        im = new Bitmap(640, 480, bytesPerPixel == 4 ? PixelFormat.Format32bppRgb: PixelFormat.Format24bppRgb);
                         BitmapData bmapdata = im.LockBits(
                             new Rectangle(0, 0, 640, 480),
                             ImageLockMode.WriteOnly,
@@ -421,7 +452,7 @@ namespace NiUI
 
             if (cb_type.SelectedItem is SensorMode selectedType)
             {
-                Settings.Default.CameraType = (int)selectedType;
+                Settings.Default.CameraType = (int) selectedType;
             }
 
             Settings.Default.AutoNotification = cb_notification.Checked;
@@ -502,6 +533,12 @@ namespace NiUI
                 }
             }
 
+
+            _currentDevice.ColorFrameReady -= NewColorFrame;
+            _currentDevice.DepthFrameReady -= NewDepthFrame;
+
+            _currentDevice.Start();
+            _currentDevice.ElevationAngle = Settings.Default.Angle;
             if (Settings.Default.CameraType == (int)SensorMode.NoBackground)
             {
                 var bitmap = new Bitmap("T:\\temp\\BG.bmp");
@@ -513,13 +550,24 @@ namespace NiUI
                 background = new byte[data.Height * data.Stride];
                 Marshal.Copy(ptr, background, 0, data.Height * data.Stride);
                 bitmap.UnlockBits(data);
+                counter = 100000;
+                smallBlockMapping = new int[640 * 480];
+                bigBlockMapping = new int[640 * 480];
+                var maxSmallBlock = 640 / smallBlockSize;
+                var maxBigBlock = 640 / bigBlockSize;
+                for (int x = 0; x < 640; x++)
+                {
+                    var xSmallBlock = x / smallBlockSize;
+                    var xBigBlock = x / bigBlockSize;
+                     for (int y = 0; y < 480; y++)
+                    {
+                        var ySmallBlock = y / smallBlockSize;
+                        var yBigBlock = y / bigBlockSize;
+                        smallBlockMapping[y * 640 + x] = ySmallBlock * maxSmallBlock + xSmallBlock;
+                        bigBlockMapping[y * 640 + x] = yBigBlock * maxBigBlock + xBigBlock;
+                    }
+                }
             }
-
-            _currentDevice.ColorFrameReady -= NewColorFrame;
-            _currentDevice.DepthFrameReady -= NewDepthFrame;
-
-            _currentDevice.Start();
-            _currentDevice.ElevationAngle = Settings.Default.Angle;
             if (Settings.Default.CameraType == (int)SensorMode.Color || Settings.Default.CameraType == (int)SensorMode.NoBackground)
             {
                 _currentDevice.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
@@ -575,14 +623,69 @@ namespace NiUI
             {
                 lock (depthLock)
                 {
-                    //depthBytes = frame.GetRawPixelData();
+                    if (depthBytes == null)
+                    {
+                        depthBytes = new short[480 * 640];
+                    }
+                    frame.CopyPixelDataTo(depthBytes);
+                }
+                if (++counter > 10)
+                {
+                    counter = 0;
+                    //var colorMapping = new DepthImagePoint[640 * 480];
+                    //_currentDevice.CoordinateMapper.MapColorFrameToDepthFrame(
+                    //    ColorImageFormat.RgbResolution640x480Fps30, DepthImageFormat.Resolution640x480Fps30,
+                    //    frame.GetRawPixelData(), colorMapping);
+                    var colorMapping = new ColorImagePoint[640 * 480];
+                    _currentDevice.CoordinateMapper.MapDepthFrameToColorFrame(
+                        DepthImageFormat.Resolution640x480Fps30, frame.GetRawPixelData(), ColorImageFormat.RgbResolution640x480Fps30, colorMapping);
+                    depthMapping = new int[640 *480];
+                    for (int i = 0; i < 480 * 640; i++)
+                    {
+                        var point = colorMapping[i];
+                        if (point.X > -1 && point.Y > -1)
+                        {
+                            depthMapping[point.Y * 640 + point.X] = i;
+                        }
+                    }
+
                 }
             }
             else
             {
-                var data = new short[frame.PixelDataLength];
-                frame.CopyPixelDataTo(data);
-                throw new NotImplementedException("Depthdata Transformation");
+                var depthData = new short[frame.PixelDataLength];
+                frame.CopyPixelDataTo(depthData);
+                var bitmapData = new byte[640 * 480 * 3];
+                for (int i = 0; i < depthData.Length; i++)
+                {
+                    var bi = 3 * i;
+                    switch (depthData[i])
+                    {
+                        case -8:
+                            bitmapData[bi] = 0;
+                            bitmapData[bi + 1] = 0;
+                            bitmapData[bi + 2] = 255;
+                            break;
+                        case -1:
+                            bitmapData[bi] = 255;
+                            bitmapData[bi + 1] = 0;
+                            bitmapData[bi + 2] = 255;
+                            break;
+                        case 0:
+                            bitmapData[bi] = 0;
+                            bitmapData[bi + 1] = 255;
+                            bitmapData[bi + 2] = 255;
+                            break;
+                        default:
+                            var msb = (byte)(depthData[i] / 255);
+                            var lsb = (byte)(depthData[i] % 255);
+                            bitmapData[bi] = msb;
+                            bitmapData[bi + 1] = lsb;
+                            bitmapData[bi + 2] = 0;
+                            break;
+                    }
+                }
+                CurrentSensorOnNewFrame(bitmapData, 3);
             }
         }
 
@@ -594,14 +697,34 @@ namespace NiUI
                 return;
             }
 
+            //if (Settings.Default.CameraType == (int) SensorMode.NoBackground)
+            //{
+            //    if (depthMapping == null)
+            //    {
+            //        var colormapping = _currentDevice.CoordinateMapper.MapColorFrameToDepthFrame();
+            //    }
+            //}
+
             switch (frame.Format)
             {
                 case ColorImageFormat.RgbResolution640x480Fps30:
                     var image = frame.GetRawPixelData();
-                    CurrentSensorOnNewFrame(image);
+                    CurrentSensorOnNewFrame(image, 4);
                     break;
                 case ColorImageFormat.InfraredResolution640x480Fps30:
-                    throw new NotImplementedException("Todo infrared");
+                    var irData = frame.GetRawPixelData();
+                    var bitmapData = new byte[640 * 480 * 3];
+                    for (int i = 0; i < 640 * 480; i++)
+                    {
+                        var bi = 3 * i;
+                        var iri = i * 2;
+                        var value = irData[iri + 1];
+                        var half = (byte)(value >> 1);
+                        bitmapData[bi] = half;
+                        bitmapData[bi + 1] = value;
+                        bitmapData[bi + 2] = half;
+                    }
+                    CurrentSensorOnNewFrame(bitmapData, 3);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -619,6 +742,13 @@ namespace NiUI
                 {
                     if (_currentDevice.IsRunning)
                     {
+                        _currentDevice.ColorFrameReady -= NewColorFrame;
+                        _currentDevice.DepthFrameReady -= NewDepthFrame;
+                        depthBytes = null;
+                        background = null;
+                        depthMapping = null;
+                        smallBlockMapping = null;
+                        bigBlockMapping = null;
                         _currentDevice.Stop();
                     }
                 }
