@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -588,14 +589,17 @@ namespace NiUI
             {
                 lock (depthLock)
                 {
-                    correctedDepth = new byte[480*640];
+                    if (correctedDepth == null)
+                    {
+                        correctedDepth = new byte[480*640];
+                    }
                     if (depthBytes == null)
                     {
                         depthBytes = new short[480 * 640];
                     }
                     frame.CopyPixelDataTo(depthBytes);
                 }
-                if (++counter > 10)
+                if (++counter > 12)
                 {
                     counter = 0;
                     //var colorMapping = new DepthImagePoint[640 * 480];
@@ -615,6 +619,12 @@ namespace NiUI
                         }
                     }
                 }
+
+                if (counter % 3 == 0)
+                {
+                    correctedDepth = new byte[480 * 640];
+                }
+
                 for (int i = 0; i < 480 * 640;i++)
                 {
                     var depthIndex = depthMapping[i];
@@ -626,22 +636,42 @@ namespace NiUI
                     if (depthValue >= depthLimit)
                     {
                         correctedDepth[i] = Background;
-                        continue;
                     }
-                    if (depthValue < depthLimit && depthValue > 0)
+                    else if (depthValue < depthLimit && depthValue > 0)
                     {
-                        Backtrack(i, 0);
-                        void Backtrack(int j, int dist)
+                        correctedDepth[i] = Foreground;
+                    }
+                }
+
+                if (counter % 3 ==0)
+                {
+                    for (int i = 0; i < 480 * 640; i++)
+                    {
+                        if (correctedDepth[i] == Background)
                         {
-                            if (j < 0 || correctedDepth[j] != Unknown || dist > 300)
+                            continue;
+                        }
+                        if (correctedDepth[i] == Foreground)
+                        {
+                            correctedDepth[i] = Unknown;
+                            Track(i, 0);
+                            void Track(int j, int dist)
                             {
-                                return;
-                            }
-                            correctedDepth[j] = Foreground;
-                            Backtrack(j - 640, dist + 1);
-                            if (j % 640 != 0 && depthMapping[j] % 640 != 0)
-                            {
-                                Backtrack(j - 1, dist + 1);
+                                if (j < 0 || j >= 640 * 480 || correctedDepth[j] != Unknown || dist > 50)
+                                {
+                                    return;
+                                }
+                                correctedDepth[j] = Foreground;
+                                Track(j - 640, dist + 1);
+                                Track(j + 640, dist + 1);
+                                if (j % 640 != 0 && depthMapping[j] % 640 != 0)
+                                {
+                                    Track(j - 1, dist + 1);
+                                }
+                                if (j % 640 != 639)
+                                {
+                                    Track(j + 1, dist + 1);
+                                }
                             }
                         }
                     }
