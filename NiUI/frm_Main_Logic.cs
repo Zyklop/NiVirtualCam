@@ -169,9 +169,17 @@ namespace NiUI
                             var depthValue = depthBytes[depthIndex];
                             var bigBlockQuali = bigBlockQuality[bigBlockMapping[i]];
                             var smalllBockQuali = smallBlockQuality[smallBlockMapping[i]];
-                            if ((depthValue < depthLimit) && (depthIndex > 0 && depthValue > 0 || smalllBockQuali > 0 || (smalllBockQuali == 0 && bigBlockQuali > 0) || bigBlockQuali > bigBlockSize * bigBlockSize))
+                            if ((depthValue < depthLimit) && (depthIndex > 0 && depthValue > 0 || smalllBockQuali > 0))
                             {
                                 Marshal.Copy(data, i * 4, ptr + i * 3, 3);
+                            }
+                            else if (smalllBockQuali == 0 && bigBlockQuali > 0 || bigBlockQuali > bigBlockSize * bigBlockSize)
+                            {
+                                var mixed = new byte[3];
+                                mixed[0] = (byte) ((data[i * 4] + background[i * 3]) / 2);
+                                mixed[1] = (byte)((data[i * 4 + 1] + background[i * 3 + 1]) / 2);
+                                mixed[2] = (byte)((data[i * 4 + 2] + background[i * 3 + 2]) / 2);
+                                Marshal.Copy(mixed, 0, ptr + i * 3, 3);
                             }
                             else
                             {
@@ -233,8 +241,17 @@ namespace NiUI
                         }
                     });
             }
+            catch (ArgumentException e)
+            {
+                GC.Collect();
+                //memory issue?
+            }
             catch (Exception e)
             {
+                if (e is OutOfMemoryException)
+                {
+                    GC.Collect();
+                }
                 var newBitmap = new Bitmap(640, 480, PixelFormat.Format24bppRgb);
                 if (!_isIdle)
                 {
