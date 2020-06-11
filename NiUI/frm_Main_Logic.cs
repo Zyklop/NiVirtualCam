@@ -16,6 +16,7 @@
     */
 
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -33,8 +34,10 @@ namespace NiUI
     // ReSharper disable once InconsistentNaming
     public sealed partial class frm_Main
     {
-        private const int smallBlockSize = 16;
-        private const int bigBlockSize = 80;
+        private const byte Unknown = 0;
+        private const byte Background = 1;
+        private const byte Foreground = 2;
+
         private const int depthLimit = 8000;
 
         private readonly BitmapBroadcaster _broadcaster;
@@ -53,11 +56,10 @@ namespace NiUI
 
         private object depthLock = new object();
         private short[] depthBytes;
+        private byte[] correctedDepth;
 
         private byte[] background;
         private int[] depthMapping;
-        private int[] smallBlockMapping;
-        private int[] bigBlockMapping;
 
         private int counter;
 
@@ -130,33 +132,6 @@ namespace NiUI
                 {
                     if (depthBytes != null)
                     {
-                        var smallBlockQuality = new int[640 / smallBlockSize * (480 / smallBlockSize)];
-                        var bigBlockQuality = new int[640 / bigBlockSize * (480 / bigBlockSize)];
-                        for (int i = 0; i < 640 * 480; i++)
-                        {
-                            var depthIndex = depthMapping[i];
-                            var depthValue = depthBytes[depthIndex];
-                            if (depthValue < depthLimit && depthIndex > 0 && depthValue > 0)
-                            {
-                                smallBlockQuality[smallBlockMapping[i]] += 3;
-                                bigBlockQuality[bigBlockMapping[i]] += 3;
-                            }
-                            else if (depthValue == 0)
-                            {
-                                smallBlockQuality[smallBlockMapping[i]] += 2;
-                                bigBlockQuality[bigBlockMapping[i]] += 2;
-                            }
-                            else if (depthValue == -1)
-                            {
-                                smallBlockQuality[smallBlockMapping[i]] += 1;
-                                bigBlockQuality[bigBlockMapping[i]] += 1;
-                            }
-                            else if (depthValue >= depthLimit)
-                            {
-                                smallBlockQuality[smallBlockMapping[i]] -= 3;
-                                bigBlockQuality[bigBlockMapping[i]] -= 3;
-                            }
-                        }
                         im = new Bitmap(640, 480, PixelFormat.Format24bppRgb);
                         BitmapData bmapdata = im.LockBits(
                             new Rectangle(0, 0, 640, 480),
@@ -165,21 +140,10 @@ namespace NiUI
                         IntPtr ptr = bmapdata.Scan0;
                         for (int i = 0; i < 640 * 480; i++)
                         {
-                            var depthIndex = depthMapping[i];
-                            var depthValue = depthBytes[depthIndex];
-                            var bigBlockQuali = bigBlockQuality[bigBlockMapping[i]];
-                            var smalllBockQuali = smallBlockQuality[smallBlockMapping[i]];
-                            if ((depthValue < depthLimit) && (depthIndex > 0 && depthValue > 0 || smalllBockQuali > 0))
+                            var correctedValue = correctedDepth[i];
+                            if (correctedValue == Foreground)
                             {
                                 Marshal.Copy(data, i * 4, ptr + i * 3, 3);
-                            }
-                            else if (smalllBockQuali == 0 && bigBlockQuali > 0 || bigBlockQuali > bigBlockSize * bigBlockSize)
-                            {
-                                var mixed = new byte[3];
-                                mixed[0] = (byte) ((data[i * 4] + background[i * 3]) / 2);
-                                mixed[1] = (byte)((data[i * 4 + 1] + background[i * 3 + 1]) / 2);
-                                mixed[2] = (byte)((data[i * 4 + 2] + background[i * 3 + 2]) / 2);
-                                Marshal.Copy(mixed, 0, ptr + i * 3, 3);
                             }
                             else
                             {
@@ -568,22 +532,6 @@ namespace NiUI
                 Marshal.Copy(ptr, background, 0, data.Height * data.Stride);
                 bitmap.UnlockBits(data);
                 counter = 100000;
-                smallBlockMapping = new int[640 * 480];
-                bigBlockMapping = new int[640 * 480];
-                var maxSmallBlock = 640 / smallBlockSize;
-                var maxBigBlock = 640 / bigBlockSize;
-                for (int x = 0; x < 640; x++)
-                {
-                    var xSmallBlock = x / smallBlockSize;
-                    var xBigBlock = x / bigBlockSize;
-                     for (int y = 0; y < 480; y++)
-                    {
-                        var ySmallBlock = y / smallBlockSize;
-                        var yBigBlock = y / bigBlockSize;
-                        smallBlockMapping[y * 640 + x] = ySmallBlock * maxSmallBlock + xSmallBlock;
-                        bigBlockMapping[y * 640 + x] = yBigBlock * maxBigBlock + xBigBlock;
-                    }
-                }
             }
             if (Settings.Default.CameraType == (int)SensorMode.Color || Settings.Default.CameraType == (int)SensorMode.NoBackground)
             {
@@ -640,6 +588,7 @@ namespace NiUI
             {
                 lock (depthLock)
                 {
+                    correctedDepth = new byte[480*640];
                     if (depthBytes == null)
                     {
                         depthBytes = new short[480 * 640];
@@ -665,7 +614,37 @@ namespace NiUI
                             depthMapping[point.Y * 640 + point.X] = i;
                         }
                     }
-
+                }
+                for (int i = 0; i < 480 * 640;i++)
+                {
+                    var depthIndex = depthMapping[i];
+                    if (depthIndex == 0)
+                    {
+                        continue;
+                    }
+                    var depthValue = depthBytes[depthIndex];
+                    if (depthValue >= depthLimit)
+                    {
+                        correctedDepth[i] = Background;
+                        continue;
+                    }
+                    if (depthValue < depthLimit && depthValue > 0)
+                    {
+                        Backtrack(i, 0);
+                        void Backtrack(int j, int dist)
+                        {
+                            if (j < 0 || correctedDepth[j] != Unknown || dist > 300)
+                            {
+                                return;
+                            }
+                            correctedDepth[j] = Foreground;
+                            Backtrack(j - 640, dist + 1);
+                            if (j % 640 != 0 && depthMapping[j] % 640 != 0)
+                            {
+                                Backtrack(j - 1, dist + 1);
+                            }
+                        }
+                    }
                 }
             }
             else
@@ -762,10 +741,9 @@ namespace NiUI
                         _currentDevice.ColorFrameReady -= NewColorFrame;
                         _currentDevice.DepthFrameReady -= NewDepthFrame;
                         depthBytes = null;
+                        correctedDepth = null;
                         background = null;
                         depthMapping = null;
-                        smallBlockMapping = null;
-                        bigBlockMapping = null;
                         _currentDevice.Stop();
                     }
                 }

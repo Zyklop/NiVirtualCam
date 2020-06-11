@@ -44,6 +44,7 @@
             this.gb_color = new System.Windows.Forms.GroupBox();
             this.cb_hd = new System.Windows.Forms.CheckBox();
             this.gb_ir = new System.Windows.Forms.GroupBox();
+            this.angle_slider = new System.Windows.Forms.TrackBar();
             this.gb_general = new System.Windows.Forms.GroupBox();
             this.cb_smart = new System.Windows.Forms.CheckBox();
             this.cb_notification = new System.Windows.Forms.CheckBox();
@@ -54,14 +55,13 @@
             this.l_copyright = new System.Windows.Forms.LinkLabel();
             this.notify = new System.Windows.Forms.NotifyIcon(this.components);
             this.lbl_wait = new System.Windows.Forms.Label();
-            this.angle_slider = new System.Windows.Forms.TrackBar();
             ((System.ComponentModel.ISupportInitialize)(this.pb_image)).BeginInit();
             this.gb_depth.SuspendLayout();
             this.gb_color.SuspendLayout();
             this.gb_ir.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).BeginInit();
             this.gb_general.SuspendLayout();
             this.gb_preview.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -201,6 +201,13 @@
             this.gb_ir.TabStop = false;
             this.gb_ir.Text = "Angle";
             // 
+            // angle_slider
+            // 
+            this.angle_slider.Location = new System.Drawing.Point(7, 19);
+            this.angle_slider.Name = "angle_slider";
+            this.angle_slider.Size = new System.Drawing.Size(208, 45);
+            this.angle_slider.TabIndex = 0;
+            // 
             // gb_general
             // 
             this.gb_general.Controls.Add(this.cb_smart);
@@ -303,13 +310,6 @@
             this.lbl_wait.Text = "Please wait ...";
             this.lbl_wait.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // angle_slider
-            // 
-            this.angle_slider.Location = new System.Drawing.Point(7, 19);
-            this.angle_slider.Name = "angle_slider";
-            this.angle_slider.Size = new System.Drawing.Size(208, 45);
-            this.angle_slider.TabIndex = 0;
-            // 
             // frm_Main
             // 
             this.AcceptButton = this.btn_apply;
@@ -333,7 +333,6 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.MinimizeBox = false;
             this.Name = "frm_Main";
             this.Text = "OpenNI Virtual Webcam (NiVirtualCam) Configurations";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMainFormClosing);
@@ -346,10 +345,10 @@
             this.gb_color.PerformLayout();
             this.gb_ir.ResumeLayout(false);
             this.gb_ir.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).EndInit();
             this.gb_general.ResumeLayout(false);
             this.gb_general.PerformLayout();
             this.gb_preview.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.angle_slider)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
